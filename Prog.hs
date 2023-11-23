@@ -98,12 +98,7 @@ swap_xw = ASIG [("x", V "w"), ("w", V "x")]
 
 -- 6
 fact :: Int -> Prog
-fact = \n -> case n < 0 of{
-    True -> undefined;
-    False -> ASIG [("fact", I 1), ("i", I n )] :> WHILE (NOT (V "i" :== I 0)) ((ASIG [("fact", V "fact" :* V "i" ), ("i", V "i" :- I 1)]))
-}
-
-
+fact = \n -> ASIG [("fact", I 1), ("i", I n )] :> WHILE (NOT (V "i" :== I 0)) ((ASIG [("fact", V "fact" :* V "i" ), ("i", V "i" :- I 1)]))
 
 -- usamos la función factorial para probar el programa fact
 factorial :: Int -> Int
@@ -111,21 +106,14 @@ factorial = \n -> "fact" @@ run (fact n) []
 
 -- 8
 par :: Int -> Prog
-par = \n -> case n `mod` 2 of{
-    0 -> ASIG [("par", I 1)];
-    _ -> ASIG [("par", I 0)];
-}
-
+par = \n -> ASIG [("num", I n)] :> WHILE (NOT ((V "num" :== I 0) :|| (V "num" :== I 1))) (ASIG [("num", V "num" :- I 2)]) :> IF (V "num" :== I 1) (ASIG [("par", I 0)]) (ASIG [("par", I 1)])
 -- usamos la función esPar para probar el programa par
 esPar :: Int -> Bool
 esPar = \n -> "par" @@ (run (par n) []) == 1
 
 -- 9
 mini :: Int -> Int -> Prog
-mini = \x y -> case (x - y) < 0 of{
-    True -> ASIG [("min", I x)];
-    False -> ASIG [("min", I y)];
-}
+mini = \x y -> ASIG [("x", I x), ("y", I y)] :> WHILE (NOT ((V "x" :== I 0) :|| (V "y" :== I 0))) (ASIG [("x", V "x" :- I 1), ("y", V "y" :- I 1)]) :> IF (V "x" :== I 0) (ASIG [("min", I x)]) (ASIG [("min", I y)])
 
 -- usamos la función minimo para probar el programa mini
 minimo :: Int -> Int -> Int
@@ -133,11 +121,13 @@ minimo = \m n -> "min" @@ (run (mini m n) [])
 
 -- 10
 fib :: Int -> Prog 
-fib = \n -> case n < 1 of{
-    True -> ASIG [("fib", I 1)];
-    False -> ASIG [("i", I 1), ("fib", I 1), ("aux", I 1)] :> WHILE (NOT (V "i" :== I n)) ((ASIG [("fib", V "fib" :+ V "aux" ), ("aux", V "fib"), ("i", V "i" :+ I 1)]))
-}
+fib = \n -> IF (I n :== I 0) (ASIG [("fib", I 1)]) (ASIG [("i", I 1), ("fib", I 1), ("aux", I 1)] :> WHILE (NOT (V "i" :== I n)) ((ASIG [("fib", V "fib" :+ V "aux" ), ("aux", V "fib"), ("i", V "i" :+ I 1)])))
 
 -- usamos la función fibonacci para probar el programa fib
 fibonacci :: Int -> Int
 fibonacci = \n -> "fib" @@ run (fib n) []
+
+-- variables :: Prog -> [Nom]
+
+
+-- auxiliarVariables :: Prog -> Mem
